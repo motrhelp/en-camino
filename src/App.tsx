@@ -20,48 +20,48 @@ import './App.css';
 const mockPosts = [
   {
     id: 1,
-    title: "Arrival in Saint-Jean-Pied-de-Port",
-    date: "2025-01-15",
-    snippet: "The journey begins! Arrived in this beautiful Basque town at the foot of the Pyrenees. The energy here is incredible - pilgrims from all over the world gathering for the same purpose.",
-    photo: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
-    coordinates: [43.1631, -1.2381],
+    title: "Vlissingen",
+    date: "2025-04-26",
+    snippet: "Start by the sea.",
+    photo: "https://picsum.photos/seed/vliss/800/450",
+    coordinates: [51.4420, 3.5730],
     isCurrent: false
   },
   {
     id: 2,
-    title: "Crossing the Pyrenees",
-    date: "2025-01-16",
-    snippet: "Today was challenging but breathtaking. The climb to Roncesvalles was steep, but the views of the Pyrenees were absolutely worth every step.",
-    photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    coordinates: [43.0092, -1.3192],
+    title: "Watervliet",
+    date: "2025-04-27",
+    snippet: "Into Belgium. Fields and canals.",
+    photo: "https://picsum.photos/seed/water/800/450",
+    coordinates: [51.2570, 3.6420],
     isCurrent: false
   },
   {
     id: 3,
-    title: "Pamplona's Old Town",
-    date: "2025-01-18",
-    snippet: "Spent a rest day exploring Pamplona's historic center. The Gothic cathedral and the famous running of the bulls route were fascinating to walk.",
-    photo: "https://images.unsplash.com/photo-1555992336-03a23c7b20ee?w=400&h=300&fit=crop",
-    coordinates: [42.8185, -1.6442],
+    title: "Eeklo",
+    date: "2025-04-28",
+    snippet: "Quiet town, good coffee.",
+    photo: "https://picsum.photos/seed/eeklo/800/450",
+    coordinates: [51.1860, 3.5560],
     isCurrent: false
   },
   {
     id: 4,
-    title: "Current Location: Logroño",
-    date: "2025-01-20",
-    snippet: "Made it to Logroño! The wine capital of La Rioja. The city's medieval bridges and the famous Calle Laurel with its tapas bars are calling my name.",
-    photo: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
-    coordinates: [42.4627, -2.4449],
+    title: "Gent",
+    date: "2025-04-29",
+    snippet: "Arrived in the city.",
+    photo: "https://picsum.photos/seed/gent/800/450",
+    coordinates: [51.0540, 3.7170],
     isCurrent: true
   }
 ];
 
-// Mock path coordinates for the Camino
+// Mock path coordinates for the route (ordered by taken_at)
 const pathCoordinates = [
-  [43.1631, -1.2381], // Saint-Jean-Pied-de-Port
-  [43.0092, -1.3192], // Roncesvalles
-  [42.8185, -1.6442], // Pamplona
-  [42.4627, -2.4449], // Logroño (current)
+  [51.4420, 3.5730], // Vlissingen
+  [51.2570, 3.6420], // Watervliet
+  [51.1860, 3.5560], // Eeklo
+  [51.0540, 3.7170], // Gent (current)
 ];
 
 function App() {
@@ -104,8 +104,7 @@ function App() {
             }
           ]
         },
-        center: [-3.5, 42.5], // Spain center
-        zoom: 6,
+        center: [3.62, 51.25], // Center of the route
         attributionControl: false
       });
 
@@ -142,6 +141,13 @@ function App() {
             'line-opacity': 0.7
           }
         });
+
+        // Fit map to show all points
+        const bounds = new maplibregl.LngLatBounds();
+        pathCoordinates.forEach(coord => {
+          bounds.extend([coord[1], coord[0]]); // [lon, lat]
+        });
+        map.current.fitBounds(bounds, { padding: 180, duration: 800 });
 
         // Add pins
         mockPosts.forEach((post, index) => {
@@ -448,7 +454,7 @@ function App() {
             letterSpacing: '0.5px',
           }}
         >
-          Camino 2025 · Day 12 · 243 km
+          1.5 million steps · Day 4 ·57 km
         </Typography>
         <IconButton
           onClick={handleThemeToggle}
