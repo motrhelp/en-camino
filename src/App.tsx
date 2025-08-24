@@ -1,4 +1,4 @@
-import { Add as AddIcon, Close as CloseIcon, LightMode as LightModeIcon, DarkMode as DarkModeIcon } from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, DarkMode as DarkModeIcon, LightMode as LightModeIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -12,8 +12,8 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { useState, useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 // Mock data for the travel journal
