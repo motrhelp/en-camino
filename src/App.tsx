@@ -351,11 +351,25 @@ function App() {
         <Typography variant="h6" sx={{ fontWeight: 600, color: 'grey.800' }}>
           Journey Timeline
         </Typography>
-        {isMobile && (
-          <IconButton onClick={() => setTimelineOpen(false)} size="small">
-            <CloseIcon />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton
+            onClick={handleThemeToggle}
+            size="small"
+            sx={{
+              color: 'grey.600',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.04)',
+              },
+            }}
+          >
+            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
-        )}
+          {isMobile && (
+            <IconButton onClick={() => setTimelineOpen(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          )}
+        </Box>
       </Box>
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -416,7 +430,12 @@ function App() {
   );
 
   return (
-    <Box sx={{ height: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ 
+      height: '100dvh', // Dynamic viewport height for iOS Safari
+      position: 'relative', 
+      overflow: 'hidden',
+      paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
+    }}>
             {/* Map Container */}
       <Box
         ref={mapContainer}
@@ -432,7 +451,8 @@ function App() {
         sx={{
           position: 'absolute',
           top: 24,
-          left: 24,
+          left: isMobile ? 24 : 24,
+          right: isMobile ? 24 : 'auto',
           zIndex: 1000,
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
           backdropFilter: 'blur(10px)',
@@ -456,17 +476,19 @@ function App() {
         >
           1.5 million steps · Day 4 ·57 km
         </Typography>
-        <IconButton
-          onClick={handleThemeToggle}
-          sx={{
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 1)',
-            },
-          }}
-        >
-          {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
+        {!isMobile && (
+          <IconButton
+            onClick={handleThemeToggle}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+              },
+            }}
+          >
+            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
+        )}
       </Box>
 
       {/* Timeline Panel */}
@@ -508,7 +530,7 @@ function App() {
         aria-label="add post"
         sx={{
           position: 'absolute',
-          bottom: 24,
+          bottom: isMobile ? 'calc(24px + env(safe-area-inset-bottom))' : 24,
           right: isMobile ? 24 : 424, // Adjust for timeline panel on desktop
           backgroundColor: '#1f6feb',
           '&:hover': {
@@ -520,14 +542,17 @@ function App() {
         <AddIcon />
       </Fab>
 
-      {/* Mobile Timeline Toggle */}
+      {/* Mobile Controls */}
       {isMobile && (
         <Box
           sx={{
             position: 'absolute',
-            bottom: 24,
+            bottom: isMobile ? 'calc(24px + env(safe-area-inset-bottom))' : 24,
             left: 24,
             zIndex: 1000,
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
           }}
         >
           <Chip
@@ -542,6 +567,18 @@ function App() {
               },
             }}
           />
+          <IconButton
+            onClick={handleThemeToggle}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+              },
+            }}
+          >
+            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
         </Box>
       )}
     </Box>
