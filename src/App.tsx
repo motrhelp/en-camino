@@ -23,7 +23,7 @@ const mockPosts = [
     title: "Vlissingen",
     date: "2025-04-26",
     snippet: "Start by the sea.",
-    photo: "https://picsum.photos/seed/vliss/800/450",
+    photo: "/images/vlissingen.png",
     coordinates: [51.4420, 3.5730],
     isCurrent: false
   },
@@ -32,7 +32,7 @@ const mockPosts = [
     title: "Watervliet",
     date: "2025-04-27",
     snippet: "Into Belgium. Fields and canals.",
-    photo: "https://picsum.photos/seed/water/800/450",
+    photo: "/images/watervliet.png",
     coordinates: [51.2570, 3.6420],
     isCurrent: false
   },
@@ -41,7 +41,7 @@ const mockPosts = [
     title: "Eeklo",
     date: "2025-04-28",
     snippet: "Quiet town, good coffee.",
-    photo: "https://picsum.photos/seed/eeklo/800/450",
+    photo: "/images/eeklo.png",
     coordinates: [51.1860, 3.5560],
     isCurrent: false
   },
@@ -50,7 +50,7 @@ const mockPosts = [
     title: "Gent",
     date: "2025-04-29",
     snippet: "Arrived in the city.",
-    photo: "https://picsum.photos/seed/gent/800/450",
+    photo: "/images/gent.png",
     coordinates: [51.0540, 3.7170],
     isCurrent: true
   }
