@@ -10,11 +10,12 @@ import {
   IconButton,
   Typography,
   useMediaQuery,
-  useTheme
+  useTheme as useMuiTheme
 } from '@mui/material';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
+import { useTheme } from './ThemeContext';
 
 // Mock data for the travel journal
 const mockPosts = [
@@ -67,9 +68,9 @@ const pathCoordinates = [
 function App() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isDarkMode, toggleTheme } = useTheme();
+  const muiTheme = useMuiTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
@@ -135,7 +136,7 @@ function App() {
             'line-cap': 'round'
           },
           paint: {
-            'line-color': '#1f6feb',
+            'line-color': isDarkMode ? '#ffffff' : '#000000',
             'line-width': 3,
             'line-dasharray': [2, 2],
             'line-opacity': 0.7
@@ -170,19 +171,19 @@ function App() {
             }
           });
 
-          // Add pin layer
-          map.current!.addLayer({
-            id: pinId,
-            type: 'circle',
-            source: pinId,
-            paint: {
-              'circle-radius': post.isCurrent ? 12 : 8,
-              'circle-color': selectedPost === post.id ? '#1f6feb' : (post.isCurrent ? '#ff6b6b' : '#666'),
-              'circle-stroke-color': '#ffffff',
-              'circle-stroke-width': 3,
-              'circle-opacity': 0.9
-            }
-          });
+                  // Add pin layer
+        map.current!.addLayer({
+          id: pinId,
+          type: 'circle',
+          source: pinId,
+          paint: {
+            'circle-radius': post.isCurrent ? 12 : 8,
+            'circle-color': selectedPost === post.id ? (isDarkMode ? '#ffffff' : '#000000') : (post.isCurrent ? '#ff6b6b' : (isDarkMode ? '#cccccc' : '#666666')),
+            'circle-stroke-color': isDarkMode ? '#000000' : '#ffffff',
+            'circle-stroke-width': 3,
+            'circle-opacity': 0.9
+          }
+        });
 
           // Add pulsing effect for current location
           if (post.isCurrent) {
@@ -239,11 +240,26 @@ function App() {
       
       if (layer) {
         map.current!.setPaintProperty(pinId, 'circle-color', 
-          selectedPost === post.id ? '#1f6feb' : (post.isCurrent ? '#ff6b6b' : '#666')
+          selectedPost === post.id ? (isDarkMode ? '#ffffff' : '#000000') : (post.isCurrent ? '#ff6b6b' : (isDarkMode ? '#cccccc' : '#666666'))
+        );
+        map.current!.setPaintProperty(pinId, 'circle-stroke-color', 
+          isDarkMode ? '#000000' : '#ffffff'
         );
       }
     });
-  }, [selectedPost]);
+  }, [selectedPost, isDarkMode]);
+
+  // Update path line color when theme changes
+  useEffect(() => {
+    if (!map.current) return;
+
+    const pathLayer = map.current.getLayer('path-line');
+    if (pathLayer) {
+      map.current.setPaintProperty('path-line', 'line-color', 
+        isDarkMode ? '#ffffff' : '#000000'
+      );
+    }
+  }, [isDarkMode]);
 
   // Pulsing animation for current location
   useEffect(() => {
@@ -304,7 +320,7 @@ function App() {
   };
 
   const handleThemeToggle = () => {
-    setIsDarkMode(!isDarkMode);
+    toggleTheme();
     
     if (map.current) {
       const newTiles = isDarkMode ? [
@@ -331,7 +347,7 @@ function App() {
       sx={{
         width: isMobile ? '100%' : 400,
         height: isMobile ? '60vh' : '100vh',
-        backgroundColor: 'white',
+        backgroundColor: 'background.paper',
         boxShadow: isMobile ? '0px -4px 20px rgba(0,0,0,0.1)' : '4px 0px 20px rgba(0,0,0,0.1)',
         overflow: 'hidden',
         display: 'flex',
@@ -342,13 +358,13 @@ function App() {
         sx={{
           p: 2,
           borderBottom: '1px solid',
-          borderColor: 'grey.200',
+          borderColor: 'divider',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'grey.800' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Journey Timeline
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -356,9 +372,9 @@ function App() {
             onClick={handleThemeToggle}
             size="small"
             sx={{
-              color: 'grey.600',
+              color: 'text.secondary',
               '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.04)',
+                backgroundColor: 'action.hover',
               },
             }}
           >
@@ -380,8 +396,8 @@ function App() {
               mb: 2,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              border: selectedPost === post.id ? '2px solid #1f6feb' : '1px solid',
-              borderColor: selectedPost === post.id ? '#1f6feb' : 'grey.200',
+              border: selectedPost === post.id ? '2px solid' : '1px solid',
+              borderColor: selectedPost === post.id ? 'primary.main' : 'divider',
               '&:hover': {
                 transform: 'translateY(-2px)',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -409,14 +425,14 @@ function App() {
                     label="Current"
                     size="small"
                     sx={{
-                      backgroundColor: '#1f6feb',
-                      color: 'white',
+                      backgroundColor: 'primary.main',
+                      color: 'primary.contrastText',
                       fontSize: '0.7rem',
                     }}
                   />
                 )}
               </Box>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'grey.800' }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
                 {post.title}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
@@ -463,13 +479,17 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           gap: 2,
+          ...(isDarkMode && {
+            backgroundColor: 'rgba(30, 30, 30, 0.9)',
+            color: 'white',
+          }),
         }}
       >
         <Typography
           variant="h5"
           sx={{
             fontWeight: 300,
-            color: 'grey.800',
+            color: isDarkMode ? 'white' : 'grey.800',
             fontFamily: '"Playfair Display", serif',
             letterSpacing: '0.5px',
           }}
@@ -480,9 +500,10 @@ function App() {
           <IconButton
             onClick={handleThemeToggle}
             sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
+              color: isDarkMode ? 'white' : 'inherit',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 1)',
               },
             }}
           >
@@ -532,10 +553,6 @@ function App() {
           position: 'absolute',
           bottom: isMobile ? 'calc(24px + env(safe-area-inset-bottom))' : 24,
           right: isMobile ? 24 : 424, // Adjust for timeline panel on desktop
-          backgroundColor: '#1f6feb',
-          '&:hover': {
-            backgroundColor: '#1a5fd9',
-          },
         }}
         onClick={handleAddPost}
       >
@@ -559,21 +576,23 @@ function App() {
             label="Timeline"
             onClick={() => setTimelineOpen(true)}
             sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
               backdropFilter: 'blur(10px)',
               cursor: 'pointer',
+              color: isDarkMode ? 'white' : 'inherit',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
+                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
               },
             }}
           />
           <IconButton
             onClick={handleThemeToggle}
             sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
               backdropFilter: 'blur(10px)',
+              color: isDarkMode ? 'white' : 'inherit',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
+                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
               },
             }}
           >
