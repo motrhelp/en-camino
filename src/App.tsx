@@ -1,4 +1,4 @@
-import { Add as AddIcon, Close as CloseIcon, DarkMode as DarkModeIcon, LightMode as LightModeIcon } from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, DarkMode as DarkModeIcon, LightMode as LightModeIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -16,6 +16,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { useTheme } from './ThemeContext';
+import { logout, onAuthChange } from './firebase';
 
 // Mock data for the travel journal
 const mockPosts = [
@@ -68,11 +69,25 @@ const pathCoordinates = [
 function App() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const { isDarkMode, toggleTheme } = useTheme();
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+
+  // Authentication state management (only for admin features)
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -478,7 +493,7 @@ function App() {
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          justifyContent: 'space-between',
           ...(isDarkMode && {
             backgroundColor: 'rgba(30, 30, 30, 0.9)',
             color: 'white',
@@ -496,20 +511,23 @@ function App() {
         >
           1.5 million steps · Day 4 ·57 km
         </Typography>
-        {!isMobile && (
-          <IconButton
-            onClick={handleThemeToggle}
-            sx={{
-              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
-              color: isDarkMode ? 'white' : 'inherit',
-              '&:hover': {
-                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 1)',
-              },
-            }}
-          >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {!isMobile && (
+            <IconButton
+              onClick={handleThemeToggle}
+              sx={{
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
+                color: isDarkMode ? 'white' : 'inherit',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 1)',
+                },
+              }}
+            >
+              {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          )}
+
+        </Box>
       </Box>
 
       {/* Timeline Panel */}
@@ -545,19 +563,21 @@ function App() {
         </Drawer>
       )}
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="add post"
-        sx={{
-          position: 'absolute',
-          bottom: isMobile ? 'calc(24px + env(safe-area-inset-bottom))' : 24,
-          right: isMobile ? 24 : 424, // Adjust for timeline panel on desktop
-        }}
-        onClick={handleAddPost}
-      >
-        <AddIcon />
-      </Fab>
+      {/* Floating Action Button - Only for authenticated users */}
+      {user && (
+        <Fab
+          color="primary"
+          aria-label="add post"
+          sx={{
+            position: 'absolute',
+            bottom: isMobile ? 'calc(24px + env(safe-area-inset-bottom))' : 24,
+            right: isMobile ? 24 : 424, // Adjust for timeline panel on desktop
+          }}
+          onClick={handleAddPost}
+        >
+          <AddIcon />
+        </Fab>
+      )}
 
       {/* Mobile Controls */}
       {isMobile && (
@@ -598,6 +618,21 @@ function App() {
           >
             {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
+          {user && (
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                color: isDarkMode ? 'white' : 'inherit',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
+                },
+              }}
+            >
+              <LogoutIcon />
+            </IconButton>
+          )}
         </Box>
       )}
     </Box>
