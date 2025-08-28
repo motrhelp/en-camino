@@ -9,6 +9,7 @@ import {
   IconButton,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
 import { useState } from 'react';
 import { useCaminoStore } from './stores/caminoStore';
@@ -25,33 +26,35 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
   const [timestamp, setTimestamp] = useState('');
   const [image, setImage] = useState<File | null>(null);
   
-  const { points, setPoints } = useCaminoStore();
+  const { addPoint, loading, error } = useCaminoStore();
 
-  const handleConfirm = () => {
-    if (!coordinates || !title.trim()) {
-      return; // Don't add if no coordinates or title
+  const handleConfirm = async () => {
+    if (!coordinates || !timestamp) {
+      return; // Don't add if no coordinates or timestamp
     }
 
-    const newPoint = {
-      id: Date.now().toString(), // Simple ID generation for now
-      title: title.trim(),
+    const pointData = {
+      ...(title.trim() && { title: title.trim() }),
       coordinates: {
         latitude: coordinates[0],
         longitude: coordinates[1],
       },
-      cover: image ? URL.createObjectURL(image) : '/images/default.png', // Default image or uploaded image
-      timestamp: timestamp ? new Date(timestamp) : new Date(),
+      ...(image && { cover: URL.createObjectURL(image) }),
+      timestamp: new Date(timestamp),
+      ...(url.trim() && { url: url.trim() }),
     };
 
-    // Add to Zustand store
-    setPoints([...points, newPoint]);
-
-    // Reset form and close dialog
-    setTitle('');
-    setUrl('');
-    setTimestamp('');
-    setImage(null);
-    onClose();
+    const result = await addPoint(pointData);
+    
+    if (result.success) {
+      // Reset form and close dialog
+      setTitle('');
+      setUrl('');
+      setTimestamp('');
+      setImage(null);
+      onClose();
+    }
+    // If there's an error, it will be displayed via the store's error state
   };
 
   const isFormValid = coordinates && timestamp;
@@ -78,6 +81,11 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <TextField
             label="Time"
             type="datetime-local"
@@ -147,11 +155,11 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
         <Button 
           onClick={handleConfirm} 
           variant="contained" 
-          disabled={!isFormValid}
+          disabled={!isFormValid || loading}
           fullWidth
           size="large"
         >
-          Add Point
+          {loading ? 'Adding Point...' : 'Add Point'}
         </Button>
       </DialogActions>
     </Dialog>

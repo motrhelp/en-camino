@@ -18,7 +18,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { logout, onAuthChange } from './firebase';
-import { useCaminoStore } from './stores/caminoStore';
+import { useCaminoStore, CAMINO_ID } from './stores/caminoStore';
 
 // Mock data for the travel journal
 const mockPosts = [
@@ -92,7 +92,7 @@ function App() {
 
   // Subscribe to points using Zustand store
   useEffect(() => {
-    const unsubscribe = subscribeToPoints('8FSx2nxzykqG4HjzFEZ8');
+    const unsubscribe = subscribeToPoints(CAMINO_ID);
     return () => unsubscribe();
   }, [subscribeToPoints]);
 

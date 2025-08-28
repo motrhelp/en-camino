@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -55,6 +55,34 @@ export const getCaminoPoints = (caminoId: string, callback: (points: any[]) => v
   }, (error) => {
     console.error('❌ Firestore connection failed:', error);
   });
+};
+
+export const addCaminoPoint = async (caminoId: string, pointData: {
+  title: string;
+  coordinates: { latitude: number; longitude: number };
+  cover: string;
+  timestamp: Date;
+  url?: string;
+}) => {
+  try {
+    const pointsRef = collection(db, 'caminos', caminoId, 'points');
+    
+    // Filter out undefined values to avoid Firestore errors
+    const cleanPointData = Object.fromEntries(
+      Object.entries(pointData).filter(([_, value]) => value !== undefined)
+    );
+    
+    const docData = {
+      ...cleanPointData,
+      timestamp: serverTimestamp(), // Use server timestamp for consistency
+    };
+    
+    const docRef = await addDoc(pointsRef, docData);
+    return { id: docRef.id, error: null };
+  } catch (error: any) {
+    console.error('❌ Failed to add point to Firestore:', error);
+    return { id: null, error: error.message };
+  }
 };
 
 export default app;
