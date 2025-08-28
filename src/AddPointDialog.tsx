@@ -1,13 +1,17 @@
 import { Close as CloseIcon, PhotoCamera as PhotoCameraIcon } from '@mui/icons-material';
 import {
   Box,
+  Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
   TextField,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
+import { useCaminoStore } from './stores/caminoStore';
 
 interface AddPointDialogProps {
   open: boolean;
@@ -16,6 +20,42 @@ interface AddPointDialogProps {
 }
 
 export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogProps) => {
+  const [title, setTitle] = useState('');
+  const [url, setUrl] = useState('');
+  const [timestamp, setTimestamp] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  
+  const { points, setPoints } = useCaminoStore();
+
+  const handleConfirm = () => {
+    if (!coordinates || !title.trim()) {
+      return; // Don't add if no coordinates or title
+    }
+
+    const newPoint = {
+      id: Date.now().toString(), // Simple ID generation for now
+      title: title.trim(),
+      coordinates: {
+        latitude: coordinates[0],
+        longitude: coordinates[1],
+      },
+      cover: image ? URL.createObjectURL(image) : '/images/default.png', // Default image or uploaded image
+      timestamp: timestamp ? new Date(timestamp) : new Date(),
+    };
+
+    // Add to Zustand store
+    setPoints([...points, newPoint]);
+
+    // Reset form and close dialog
+    setTitle('');
+    setUrl('');
+    setTimestamp('');
+    setImage(null);
+    onClose();
+  };
+
+  const isFormValid = coordinates && timestamp;
+
   return (
     <Dialog
       open={open}
@@ -42,23 +82,30 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
             label="Time"
             type="datetime-local"
             fullWidth
+            value={timestamp}
+            onChange={(e) => setTimestamp(e.target.value)}
             InputLabelProps={{
               shrink: true,
             }}
             sx={{
                 mt: 1,
             }}
+            required
           />
           <TextField
             label="Title"
             fullWidth
             placeholder="Enter point title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
           <TextField
             label="URL"
             fullWidth
             placeholder="Enter URL (optional)"
             type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
           />
           {coordinates && (
             <TextField
@@ -96,6 +143,17 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
           </Box>
         </Box>
       </DialogContent>
+      <DialogActions sx={{ p: 3, pt: 0 }}>
+        <Button 
+          onClick={handleConfirm} 
+          variant="contained" 
+          disabled={!isFormValid}
+          fullWidth
+          size="large"
+        >
+          Add Point
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 };
