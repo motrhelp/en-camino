@@ -18,7 +18,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { logout, onAuthChange } from './firebase';
-import { testFirestoreConnection } from './firebase';
+import { useCaminoStore } from './stores/caminoStore';
 
 // Mock data for the travel journal
 const mockPosts = [
@@ -79,6 +79,7 @@ function App() {
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  const { points, subscribeToPoints } = useCaminoStore();
 
   // Authentication state management (only for admin features)
   useEffect(() => {
@@ -89,11 +90,20 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Test Firestore connection
+  // Subscribe to points using Zustand store
   useEffect(() => {
-    const unsubscribe = testFirestoreConnection();
+    const unsubscribe = subscribeToPoints('8FSx2nxzykqG4HjzFEZ8');
     return () => unsubscribe();
-  }, []);
+  }, [subscribeToPoints]);
+
+  // Log points when they are loaded
+  useEffect(() => {
+    if (points.length > 0) {
+      console.log('✅ Points loaded from Firestore via Zustand:', points);
+    }
+  }, [points]);
+
+
 
   const handleLogout = async () => {
     await logout();

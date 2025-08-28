@@ -41,21 +41,17 @@ export const onAuthChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
 
-// Simple function to test Firestore connection
-export const testFirestoreConnection = () => {
-  const caminoId = '8FSx2nxzykqG4HjzFEZ8';
+// Firestore functions
+export const getCaminoPoints = (caminoId: string, callback: (points: any[]) => void) => {
   const pointsRef = collection(db, 'caminos', caminoId, 'points');
   const q = query(pointsRef, orderBy('timestamp', 'asc'));
-  
-  console.log('Connecting to Firestore...');
   
   return onSnapshot(q, (snapshot) => {
     const points = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
-    console.log('✅ Firestore connection successful!');
-    console.log('📊 Points data:', points);
+    callback(points);
   }, (error) => {
     console.error('❌ Firestore connection failed:', error);
   });
