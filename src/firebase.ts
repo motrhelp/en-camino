@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -15,6 +16,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // Authentication functions
 export const loginWithEmail = async (email: string, password: string) => {
@@ -37,6 +39,26 @@ export const logout = async () => {
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
+};
+
+// Simple function to test Firestore connection
+export const testFirestoreConnection = () => {
+  const caminoId = '8FSx2nxzykqG4HjzFEZ8';
+  const pointsRef = collection(db, 'caminos', caminoId, 'points');
+  const q = query(pointsRef, orderBy('timestamp', 'asc'));
+  
+  console.log('Connecting to Firestore...');
+  
+  return onSnapshot(q, (snapshot) => {
+    const points = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    console.log('✅ Firestore connection successful!');
+    console.log('📊 Points data:', points);
+  }, (error) => {
+    console.error('❌ Firestore connection failed:', error);
+  });
 };
 
 export default app;

@@ -18,6 +18,7 @@ import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { logout, onAuthChange } from './firebase';
+import { testFirestoreConnection } from './firebase';
 
 // Mock data for the travel journal
 const mockPosts = [
@@ -85,6 +86,12 @@ function App() {
       setUser(user);
     });
 
+    return () => unsubscribe();
+  }, []);
+
+  // Test Firestore connection
+  useEffect(() => {
+    const unsubscribe = testFirestoreConnection();
     return () => unsubscribe();
   }, []);
 
