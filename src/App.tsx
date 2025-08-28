@@ -20,56 +20,8 @@ import './App.css';
 import { logout, onAuthChange } from './firebase';
 import { useCaminoStore, CAMINO_ID } from './stores/caminoStore';
 
-// Mock data for the travel journal
-const mockPosts = [
-  {
-    id: 1,
-    title: "Vlissingen",
-    date: "2025-04-26",
-    snippet: "Start by the sea.",
-    photo: "/images/vlissingen.png",
-    coordinates: [51.4420, 3.5730],
-    isCurrent: false
-  },
-  {
-    id: 2,
-    title: "Watervliet",
-    date: "2025-04-27",
-    snippet: "Into Belgium. Fields and canals.",
-    photo: "/images/watervliet.png",
-    coordinates: [51.2570, 3.6420],
-    isCurrent: false
-  },
-  {
-    id: 3,
-    title: "Eeklo",
-    date: "2025-04-28",
-    snippet: "Quiet town, good coffee.",
-    photo: "/images/eeklo.png",
-    coordinates: [51.1860, 3.5560],
-    isCurrent: false
-  },
-  {
-    id: 4,
-    title: "Gent",
-    date: "2025-04-29",
-    snippet: "Arrived in the city.",
-    photo: "/images/gent.png",
-    coordinates: [51.0540, 3.7170],
-    isCurrent: true
-  }
-];
-
-// Mock path coordinates for the route (ordered by taken_at)
-const pathCoordinates = [
-  [51.4420, 3.5730], // Vlissingen
-  [51.2570, 3.6420], // Watervliet
-  [51.1860, 3.5560], // Eeklo
-  [51.0540, 3.7170], // Gent (current)
-];
-
 function App() {
-  const [selectedPost, setSelectedPost] = useState<number | null>(null);
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [addPointOpen, setAddPointOpen] = useState(false);
   const [positioningMode, setPositioningMode] = useState(false);
@@ -103,12 +55,11 @@ function App() {
     }
   }, [points]);
 
-
-
   const handleLogout = async () => {
     await logout();
   };
 
+  // Initialize map only once
   useEffect(() => {
     if (map.current) return; // initialize map only once
 
@@ -144,11 +95,11 @@ function App() {
         attributionControl: false
       });
 
-      // Add path line
+      // Add path line when map loads
       map.current.on('load', () => {
         if (!map.current) return;
 
-        // Add path source
+        // Add path source with empty data initially
         map.current.addSource('path', {
           type: 'geojson',
           data: {
@@ -156,7 +107,7 @@ function App() {
             properties: {},
             geometry: {
               type: 'LineString',
-              coordinates: pathCoordinates.map(coord => [coord[1], coord[0]]) // [lon, lat]
+              coordinates: [] // Empty initially
             }
           }
         });
@@ -177,83 +128,6 @@ function App() {
             'line-opacity': 0.7
           }
         });
-
-        // Fit map to show all points
-        const bounds = new maplibregl.LngLatBounds();
-        pathCoordinates.forEach(coord => {
-          bounds.extend([coord[1], coord[0]]); // [lon, lat]
-        });
-        map.current.fitBounds(bounds, { padding: 180, duration: 800 });
-
-        // Add pins
-        mockPosts.forEach((post, index) => {
-          const pinId = `pin-${post.id}`;
-          
-          // Add pin source
-          map.current!.addSource(pinId, {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {
-                id: post.id,
-                title: post.title,
-                isCurrent: post.isCurrent
-              },
-              geometry: {
-                type: 'Point',
-                coordinates: [post.coordinates[1], post.coordinates[0]] // [lon, lat]
-              }
-            }
-          });
-
-          // Add pin layer
-          map.current!.addLayer({
-            id: pinId,
-            type: 'circle',
-            source: pinId,
-            paint: {
-              'circle-radius': post.isCurrent ? 12 : 8,
-              'circle-color': selectedPost === post.id ? '#000000' : (post.isCurrent ? '#ff6b6b' : '#666666'),
-              'circle-stroke-color': '#ffffff',
-              'circle-stroke-width': 3,
-              'circle-opacity': 0.9
-            }
-          });
-
-          // Add pulsing effect for current location
-          if (post.isCurrent) {
-            map.current!.addLayer({
-              id: `${pinId}-pulse`,
-              type: 'circle',
-              source: pinId,
-              paint: {
-                'circle-radius': 20,
-                'circle-color': '#ff6b6b',
-                'circle-opacity': 0.3,
-                'circle-stroke-width': 0
-              }
-            });
-          }
-
-          // Add click handler
-          map.current!.on('click', pinId, (e) => {
-            if (e.features && e.features[0]) {
-              const postId = e.features[0].properties?.id;
-              if (postId) {
-                handlePostClick(postId);
-              }
-            }
-          });
-
-          // Add hover effects
-          map.current!.on('mouseenter', pinId, () => {
-            map.current!.getCanvas().style.cursor = 'pointer';
-          });
-
-          map.current!.on('mouseleave', pinId, () => {
-            map.current!.getCanvas().style.cursor = '';
-          });
-        });
       });
     }
 
@@ -265,28 +139,140 @@ function App() {
     };
   }, []);
 
+  // Update map when points change
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded() || points.length === 0) return;
+
+    // Update path
+    const pathSource = map.current.getSource('path') as maplibregl.GeoJSONSource;
+    if (pathSource) {
+      pathSource.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: points.map(point => [point.coordinates.longitude, point.coordinates.latitude])
+        }
+      });
+    }
+
+    // Update bounds
+    const bounds = new maplibregl.LngLatBounds();
+    points.forEach(point => {
+      bounds.extend([point.coordinates.longitude, point.coordinates.latitude]);
+    });
+    map.current.fitBounds(bounds, { padding: 180, duration: 800 });
+
+    // Clear existing pins
+    points.forEach(point => {
+      const pinId = `pin-${point.id}`;
+      if (map.current!.getLayer(pinId)) {
+        map.current!.removeLayer(pinId);
+      }
+      if (map.current!.getLayer(`${pinId}-pulse`)) {
+        map.current!.removeLayer(`${pinId}-pulse`);
+      }
+      if (map.current!.getSource(pinId)) {
+        map.current!.removeSource(pinId);
+      }
+    });
+
+    // Add new pins
+    points.forEach((point, index) => {
+      const pinId = `pin-${point.id}`;
+      const isCurrent = index === points.length - 1;
+      
+      // Add pin source
+      map.current!.addSource(pinId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {
+            id: point.id,
+            title: point.title,
+            isCurrent: isCurrent
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [point.coordinates.longitude, point.coordinates.latitude]
+          }
+        }
+      });
+
+      // Add pin layer
+      map.current!.addLayer({
+        id: pinId,
+        type: 'circle',
+        source: pinId,
+        paint: {
+          'circle-radius': isCurrent ? 12 : 8,
+          'circle-color': selectedPost === point.id ? muiTheme.palette.primary.main : (isCurrent ? muiTheme.palette.primary.main : muiTheme.palette.secondary.main),
+          'circle-stroke-color': muiTheme.palette.background.default,
+          'circle-stroke-width': 3,
+          'circle-opacity': 0.9
+        }
+      });
+
+      // Add pulsing effect for current location
+      if (isCurrent) {
+        map.current!.addLayer({
+          id: `${pinId}-pulse`,
+          type: 'circle',
+          source: pinId,
+          paint: {
+            'circle-radius': 5,
+            'circle-color': muiTheme.palette.warning.main,
+            'circle-opacity': 0.3,
+            'circle-stroke-width': 0
+          }
+        });
+      }
+
+      // Add click handler
+      map.current!.on('click', pinId, (e) => {
+        if (e.features && e.features[0]) {
+          const postId = e.features[0].properties?.id;
+          if (postId) {
+            handlePostClick(postId);
+          }
+        }
+      });
+
+      // Add hover effects
+      map.current!.on('mouseenter', pinId, () => {
+        map.current!.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.current!.on('mouseleave', pinId, () => {
+        map.current!.getCanvas().style.cursor = '';
+      });
+    });
+  }, [points, muiTheme.palette.primary.main, muiTheme.palette.secondary.main, muiTheme.palette.background.default, muiTheme.palette.warning.main]);
+
   // Update pin colors when selectedPost changes
   useEffect(() => {
     if (!map.current) return;
 
-    mockPosts.forEach((post) => {
-      const pinId = `pin-${post.id}`;
+    points.forEach((point, index) => {
+      const pinId = `pin-${point.id}`;
       const layer = map.current!.getLayer(pinId);
+      const isCurrent = index === points.length - 1;
       
       if (layer) {
         map.current!.setPaintProperty(pinId, 'circle-color', 
-          selectedPost === post.id ? '#000000' : (post.isCurrent ? '#ff6b6b' : '#666666')
+          selectedPost === point.id ? muiTheme.palette.primary.main : (isCurrent ? muiTheme.palette.primary.main : muiTheme.palette.secondary.main)
         );
-        map.current!.setPaintProperty(pinId, 'circle-stroke-color', '#ffffff');
+        map.current!.setPaintProperty(pinId, 'circle-stroke-color', muiTheme.palette.background.default);
       }
     });
-  }, [selectedPost]);
+  }, [selectedPost, points, muiTheme.palette.primary.main, muiTheme.palette.secondary.main, muiTheme.palette.background.default]);
 
   // Pulsing animation for current location
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || points.length === 0) return;
 
-    const pulseId = 'pin-4-pulse'; // Current location pin
+    const currentPoint = points[points.length - 1];
+    const pulseId = `pin-${currentPoint.id}-pulse`;
     const layer = map.current.getLayer(pulseId);
     
     if (!layer) return;
@@ -308,7 +294,7 @@ function App() {
         cancelAnimationFrame(animationId);
       }
     };
-  }, []);
+  }, [points]);
 
   // Update coordinates when map moves during positioning mode
   useEffect(() => {
@@ -329,7 +315,7 @@ function App() {
     };
   }, [positioningMode]);
 
-  const handlePostClick = (postId: number) => {
+  const handlePostClick = (postId: string) => {
     setSelectedPost(postId);
     if (isMobile) {
       setTimelineOpen(false);
@@ -337,10 +323,10 @@ function App() {
 
     // Fly to the selected location
     if (map.current) {
-      const post = mockPosts.find(p => p.id === postId);
+      const post = points.find(p => p.id === postId);
       if (post) {
         map.current.flyTo({
-          center: [post.coordinates[1], post.coordinates[0]],
+          center: [post.coordinates.longitude, post.coordinates.latitude],
           zoom: 10,
           duration: 1000
         });
@@ -403,58 +389,67 @@ function App() {
       </Box>
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {mockPosts.map((post) => (
-          <Card
-            key={post.id}
-            sx={{
-              mb: 2,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              border: selectedPost === post.id ? '2px solid' : '1px solid',
-              borderColor: selectedPost === post.id ? 'primary.main' : 'divider',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-              },
-            }}
-            onClick={() => handlePostClick(post.id)}
-          >
-            <CardMedia
-              component="img"
-              height="140"
-              image={post.photo}
-              alt={post.title}
-              sx={{ objectFit: 'cover' }}
-            />
-            <CardContent sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  {new Date(post.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
+        {points.map((point, index) => {
+          const isCurrent = index === points.length - 1;
+          const date = point.timestamp?.toDate ? point.timestamp.toDate() : new Date();
+          
+          return (
+            <Card
+              key={point.id}
+              sx={{
+                mb: 2,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: selectedPost === point.id ? '2px solid' : '1px solid',
+                borderColor: selectedPost === point.id ? 'primary.main' : 'divider',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                },
+              }}
+              onClick={() => handlePostClick(point.id)}
+            >
+              <CardMedia
+                component="img"
+                height="140"
+                image={point.cover}
+                alt={point.title}
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    {date.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Typography>
+                  {isCurrent && (
+                    <Chip
+                      label="Current"
+                      size="small"
+                      sx={{
+                        backgroundColor: 'primary.main',
+                        color: 'primary.contrastText',
+                        fontSize: '0.7rem',
+                      }}
+                    />
+                  )}
+                </Box>
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
+                  {point.title}
                 </Typography>
-                {post.isCurrent && (
-                  <Chip
-                    label="Current"
-                    size="small"
-                    sx={{
-                      backgroundColor: 'primary.main',
-                      color: 'primary.contrastText',
-                      fontSize: '0.7rem',
-                    }}
-                  />
+                {point.url && (
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                    <a href={point.url} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                      View details →
+                    </a>
+                  </Typography>
                 )}
-              </Box>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
-                {post.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
-                {post.snippet}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </Box>
     </Box>
   );
