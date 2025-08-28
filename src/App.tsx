@@ -12,6 +12,7 @@ import {
   useMediaQuery,
   useTheme as useMuiTheme
 } from '@mui/material';
+import { AddPointDialog } from './AddPointDialog';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
@@ -68,6 +69,7 @@ const pathCoordinates = [
 function App() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [addPointOpen, setAddPointOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
@@ -308,8 +310,11 @@ function App() {
   };
 
   const handleAddPost = () => {
-    // TODO: Implement add post functionality
-    console.log('Add post clicked');
+    setAddPointOpen(true);
+  };
+
+  const handleCloseAddPoint = () => {
+    setAddPointOpen(false);
   };
 
   const TimelinePanel = () => (
@@ -410,6 +415,7 @@ function App() {
       overflow: 'hidden',
       paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
     }}>
+      <AddPointDialog open={addPointOpen} onClose={handleCloseAddPoint} />
       {/* Map Container */}
       <Box
         ref={mapContainer}
