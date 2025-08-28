@@ -12,7 +12,7 @@ import {
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginWithEmail } from './firebase';
-import { useTheme } from './ThemeContext';
+
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -23,7 +23,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { isDarkMode } = useTheme();
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,10 +63,8 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
           maxWidth: 400,
           p: 4,
           borderRadius: 3,
-          background: isDarkMode 
-            ? 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)'
-            : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-          border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          border: '1px solid rgba(0,0,0,0.1)',
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -90,7 +88,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
             component="h1"
             sx={{
               fontWeight: 600,
-              color: isDarkMode ? 'white' : 'text.primary',
+              color: 'text.primary',
               mb: 1,
             }}
           >
@@ -99,7 +97,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
           <Typography
             variant="body2"
             sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'text.secondary',
+              color: 'text.secondary',
             }}
           >
             Sign in to access the admin panel
@@ -118,22 +116,22 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
             disabled={loading}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                backgroundColor: 'rgba(0,0,0,0.02)',
                 '& fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                  borderColor: 'rgba(0,0,0,0.2)',
                 },
                 '&:hover fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                  borderColor: 'rgba(0,0,0,0.3)',
                 },
                 '&.Mui-focused fieldset': {
                   borderColor: 'primary.main',
                 },
               },
               '& .MuiInputLabel-root': {
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'text.secondary',
+                color: 'text.secondary',
               },
               '& .MuiInputBase-input': {
-                color: isDarkMode ? 'white' : 'text.primary',
+                color: 'text.primary',
               },
             }}
           />
@@ -149,22 +147,22 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
             disabled={loading}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                backgroundColor: 'rgba(0,0,0,0.02)',
                 '& fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                  borderColor: 'rgba(0,0,0,0.2)',
                 },
                 '&:hover fieldset': {
-                  borderColor: isDarkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                  borderColor: 'rgba(0,0,0,0.3)',
                 },
                 '&.Mui-focused fieldset': {
                   borderColor: 'primary.main',
                 },
               },
               '& .MuiInputLabel-root': {
-                color: isDarkMode ? 'rgba(255,255,255,0.7)' : 'text.secondary',
+                color: 'text.secondary',
               },
               '& .MuiInputBase-input': {
-                color: isDarkMode ? 'white' : 'text.primary',
+                color: 'text.primary',
               },
             }}
           />
@@ -194,7 +192,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
                 background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
               },
               '&:disabled': {
-                background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                background: 'rgba(0,0,0,0.1)',
               },
             }}
           >
@@ -210,7 +208,7 @@ const Login = ({ onLoginSuccess }: LoginProps) => {
           <Typography
             variant="caption"
             sx={{
-              color: isDarkMode ? 'rgba(255,255,255,0.5)' : 'text.secondary',
+              color: 'text.secondary',
               fontSize: '0.8rem',
             }}
           >

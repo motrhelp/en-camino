@@ -1,4 +1,4 @@
-import { Add as AddIcon, Close as CloseIcon, DarkMode as DarkModeIcon, LightMode as LightModeIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -15,7 +15,6 @@ import {
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
-import { useTheme } from './ThemeContext';
 import { logout, onAuthChange } from './firebase';
 
 // Mock data for the travel journal
@@ -70,7 +69,6 @@ function App() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const { isDarkMode, toggleTheme } = useTheme();
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -151,7 +149,7 @@ function App() {
             'line-cap': 'round'
           },
           paint: {
-            'line-color': isDarkMode ? '#ffffff' : '#000000',
+            'line-color': '#000000',
             'line-width': 3,
             'line-dasharray': [2, 2],
             'line-opacity': 0.7
@@ -186,19 +184,19 @@ function App() {
             }
           });
 
-                  // Add pin layer
-        map.current!.addLayer({
-          id: pinId,
-          type: 'circle',
-          source: pinId,
-          paint: {
-            'circle-radius': post.isCurrent ? 12 : 8,
-            'circle-color': selectedPost === post.id ? (isDarkMode ? '#ffffff' : '#000000') : (post.isCurrent ? '#ff6b6b' : (isDarkMode ? '#cccccc' : '#666666')),
-            'circle-stroke-color': isDarkMode ? '#000000' : '#ffffff',
-            'circle-stroke-width': 3,
-            'circle-opacity': 0.9
-          }
-        });
+          // Add pin layer
+          map.current!.addLayer({
+            id: pinId,
+            type: 'circle',
+            source: pinId,
+            paint: {
+              'circle-radius': post.isCurrent ? 12 : 8,
+              'circle-color': selectedPost === post.id ? '#000000' : (post.isCurrent ? '#ff6b6b' : '#666666'),
+              'circle-stroke-color': '#ffffff',
+              'circle-stroke-width': 3,
+              'circle-opacity': 0.9
+            }
+          });
 
           // Add pulsing effect for current location
           if (post.isCurrent) {
@@ -255,47 +253,27 @@ function App() {
       
       if (layer) {
         map.current!.setPaintProperty(pinId, 'circle-color', 
-          selectedPost === post.id ? (isDarkMode ? '#ffffff' : '#000000') : (post.isCurrent ? '#ff6b6b' : (isDarkMode ? '#cccccc' : '#666666'))
+          selectedPost === post.id ? '#000000' : (post.isCurrent ? '#ff6b6b' : '#666666')
         );
-        map.current!.setPaintProperty(pinId, 'circle-stroke-color', 
-          isDarkMode ? '#000000' : '#ffffff'
-        );
+        map.current!.setPaintProperty(pinId, 'circle-stroke-color', '#ffffff');
       }
     });
-  }, [selectedPost, isDarkMode]);
-
-  // Update path line color when theme changes
-  useEffect(() => {
-    if (!map.current) return;
-
-    const pathLayer = map.current.getLayer('path-line');
-    if (pathLayer) {
-      map.current.setPaintProperty('path-line', 'line-color', 
-        isDarkMode ? '#ffffff' : '#000000'
-      );
-    }
-  }, [isDarkMode]);
+  }, [selectedPost]);
 
   // Pulsing animation for current location
   useEffect(() => {
     if (!map.current) return;
 
-    const currentPost = mockPosts.find(post => post.isCurrent);
-    if (!currentPost) return;
-
-    const pulseId = `pin-${currentPost.id}-pulse`;
+    const pulseId = 'pin-4-pulse'; // Current location pin
     const layer = map.current.getLayer(pulseId);
+    
     if (!layer) return;
 
     let animationId: number;
-    let phase = 0;
+    let radius = 20;
 
     const animate = () => {
-      phase += 0.1;
-      const opacity = 0.3 * (1 + Math.sin(phase) * 0.5);
-      const radius = 20 + Math.sin(phase) * 5;
-
-      map.current!.setPaintProperty(pulseId, 'circle-opacity', opacity);
+      radius = radius === 20 ? 40 : 20;
       map.current!.setPaintProperty(pulseId, 'circle-radius', radius);
 
       animationId = requestAnimationFrame(animate);
@@ -334,29 +312,6 @@ function App() {
     console.log('Add post clicked');
   };
 
-  const handleThemeToggle = () => {
-    toggleTheme();
-    
-    if (map.current) {
-      const newTiles = isDarkMode ? [
-        'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
-      ] : [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-      ];
-      
-      const source = map.current.getSource('cartodb') as maplibregl.RasterTileSource;
-      if (source) {
-        source.setTiles(newTiles);
-      }
-    }
-  };
-
   const TimelinePanel = () => (
     <Box
       sx={{
@@ -383,18 +338,6 @@ function App() {
           Journey Timeline
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton
-            onClick={handleThemeToggle}
-            size="small"
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
           {isMobile && (
             <IconButton onClick={() => setTimelineOpen(false)} size="small">
               <CloseIcon />
@@ -467,7 +410,7 @@ function App() {
       overflow: 'hidden',
       paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
     }}>
-            {/* Map Container */}
+      {/* Map Container */}
       <Box
         ref={mapContainer}
         sx={{
@@ -494,40 +437,19 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          ...(isDarkMode && {
-            backgroundColor: 'rgba(30, 30, 30, 0.9)',
-            color: 'white',
-          }),
         }}
       >
         <Typography
           variant="h5"
           sx={{
             fontWeight: 300,
-            color: isDarkMode ? 'white' : 'grey.800',
+            color: 'grey.800',
             fontFamily: '"Playfair Display", serif',
             letterSpacing: '0.5px',
           }}
         >
           1.5 million steps · Day 4 ·57 km
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {!isMobile && (
-            <IconButton
-              onClick={handleThemeToggle}
-              sx={{
-                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
-                color: isDarkMode ? 'white' : 'inherit',
-                '&:hover': {
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 1)',
-                },
-              }}
-            >
-              {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
-          )}
-
-        </Box>
       </Box>
 
       {/* Timeline Panel */}
@@ -596,37 +518,22 @@ function App() {
             label="Timeline"
             onClick={() => setTimelineOpen(true)}
             sx={{
-              backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
               backdropFilter: 'blur(10px)',
               cursor: 'pointer',
-              color: isDarkMode ? 'white' : 'inherit',
               '&:hover': {
-                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
+                backgroundColor: 'rgba(255, 255, 255, 1)',
               },
             }}
           />
-          <IconButton
-            onClick={handleThemeToggle}
-            sx={{
-              backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(10px)',
-              color: isDarkMode ? 'white' : 'inherit',
-              '&:hover': {
-                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
-              },
-            }}
-          >
-            {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
           {user && (
             <IconButton
               onClick={handleLogout}
               sx={{
-                backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(10px)',
-                color: isDarkMode ? 'white' : 'inherit',
                 '&:hover': {
-                  backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 1)' : 'rgba(255, 255, 255, 1)',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
                 },
               }}
             >
