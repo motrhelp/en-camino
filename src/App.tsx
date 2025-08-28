@@ -13,6 +13,7 @@ import {
   useTheme as useMuiTheme
 } from '@mui/material';
 import { AddPointDialog } from './AddPointDialog';
+import { CrosshairOverlay } from './CrosshairOverlay';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
@@ -70,6 +71,8 @@ function App() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [addPointOpen, setAddPointOpen] = useState(false);
+  const [positioningMode, setPositioningMode] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<[number, number] | null>(null);
   const [user, setUser] = useState<any>(null);
   const muiTheme = useMuiTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
@@ -290,6 +293,25 @@ function App() {
     };
   }, []);
 
+  // Update coordinates when map moves during positioning mode
+  useEffect(() => {
+    if (!map.current || !positioningMode) return;
+
+    const handleMapMove = () => {
+      const center = map.current!.getCenter();
+      // Force re-render of CrosshairOverlay with new coordinates
+      setSelectedCoordinates([center.lat, center.lng]);
+    };
+
+    map.current.on('move', handleMapMove);
+
+    return () => {
+      if (map.current) {
+        map.current.off('move', handleMapMove);
+      }
+    };
+  }, [positioningMode]);
+
   const handlePostClick = (postId: number) => {
     setSelectedPost(postId);
     if (isMobile) {
@@ -310,11 +332,23 @@ function App() {
   };
 
   const handleAddPost = () => {
-    setAddPointOpen(true);
+    setPositioningMode(true);
+    setSelectedCoordinates(null);
   };
 
   const handleCloseAddPoint = () => {
     setAddPointOpen(false);
+    setPositioningMode(false);
+    setSelectedCoordinates(null);
+  };
+
+  const handleConfirmLocation = () => {
+    if (map.current) {
+      const center = map.current.getCenter();
+      setSelectedCoordinates([center.lat, center.lng]);
+    }
+    setPositioningMode(false);
+    setAddPointOpen(true);
   };
 
   const TimelinePanel = () => (
@@ -415,7 +449,13 @@ function App() {
       overflow: 'hidden',
       paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
     }}>
-      <AddPointDialog open={addPointOpen} onClose={handleCloseAddPoint} />
+      <AddPointDialog open={addPointOpen} onClose={handleCloseAddPoint} coordinates={selectedCoordinates} />
+      {positioningMode && (
+        <CrosshairOverlay 
+          onConfirm={handleConfirmLocation}
+          coordinates={map.current ? [map.current.getCenter().lat, map.current.getCenter().lng] : null}
+        />
+      )}
       {/* Map Container */}
       <Box
         ref={mapContainer}

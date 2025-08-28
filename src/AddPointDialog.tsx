@@ -12,9 +12,10 @@ import {
 interface AddPointDialogProps {
   open: boolean;
   onClose: () => void;
+  coordinates?: [number, number];
 }
 
-export const AddPointDialog = ({ open, onClose }: AddPointDialogProps) => {
+export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogProps) => {
   return (
     <Dialog
       open={open}
@@ -59,6 +60,16 @@ export const AddPointDialog = ({ open, onClose }: AddPointDialogProps) => {
             placeholder="Enter URL (optional)"
             type="url"
           />
+          {coordinates && (
+            <TextField
+              label="Location"
+              fullWidth
+              value={`${coordinates[0].toFixed(6)}, ${coordinates[1].toFixed(6)}`}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
+          )}
           <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               Image
