@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   Drawer,
   Fab,
@@ -389,8 +388,10 @@ function App() {
       </Box>
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {points.map((point, index) => {
-          const isCurrent = index === points.length - 1;
+        {points
+          .filter(point => point.title || point.url)
+          .map((point, index) => {
+          const isCurrent = index === points.filter(p => p.title || p.url).length - 1;
           const date = point.timestamp?.toDate ? point.timestamp.toDate() : new Date();
           
           return (
@@ -409,13 +410,6 @@ function App() {
               }}
               onClick={() => handlePostClick(point.id)}
             >
-              <CardMedia
-                component="img"
-                height="140"
-                image={point.cover}
-                alt={point.title}
-                sx={{ objectFit: 'cover' }}
-              />
               <CardContent sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>

@@ -125,7 +125,7 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
               }}
             />
           )}
-          <Box>
+          {/* <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
               Image
             </Typography>
@@ -148,7 +148,7 @@ export const AddPointDialog = ({ open, onClose, coordinates }: AddPointDialogPro
                 Click to upload image
               </Typography>
             </Box>
-          </Box>
+          </Box> */}
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 3, pt: 0 }}>
