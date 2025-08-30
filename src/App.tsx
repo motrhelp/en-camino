@@ -1,8 +1,6 @@
 import { Add as AddIcon, Close as CloseIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import {
   Box,
-  Card,
-  CardContent,
   Chip,
   Drawer,
   Fab,
@@ -13,6 +11,7 @@ import {
 } from '@mui/material';
 import { AddPointDialog } from './AddPointDialog';
 import { CrosshairOverlay } from './CrosshairOverlay';
+import { Timeline } from './Timeline';
 import maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
@@ -353,100 +352,7 @@ function App() {
     setAddPointOpen(true);
   };
 
-  const TimelinePanel = () => (
-    <Box
-      sx={{
-        width: isMobile ? '100%' : 400,
-        height: isMobile ? '60vh' : '100vh',
-        backgroundColor: 'background.paper',
-        boxShadow: isMobile ? '0px -4px 20px rgba(0,0,0,0.1)' : '4px 0px 20px rgba(0,0,0,0.1)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          Journey Timeline
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {isMobile && (
-            <IconButton onClick={() => setTimelineOpen(false)} size="small">
-              <CloseIcon />
-            </IconButton>
-          )}
-        </Box>
-      </Box>
-      
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {points
-          .filter(point => point.title || point.url)
-          .map((point, index) => {
-          const isCurrent = index === points.filter(p => p.title || p.url).length - 1;
-          const date = point.timestamp?.toDate ? point.timestamp.toDate() : new Date();
-          
-          return (
-            <Card
-              key={point.id}
-              sx={{
-                mb: 2,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                border: selectedPost === point.id ? '2px solid' : '1px solid',
-                borderColor: selectedPost === point.id ? 'primary.main' : 'divider',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                },
-              }}
-              onClick={() => handlePostClick(point.id)}
-            >
-              <CardContent sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    {date.toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                  </Typography>
-                  {isCurrent && (
-                    <Chip
-                      label="Current"
-                      size="small"
-                      sx={{
-                        backgroundColor: 'primary.main',
-                        color: 'primary.contrastText',
-                        fontSize: '0.7rem',
-                      }}
-                    />
-                  )}
-                </Box>
-                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
-                  {point.title}
-                </Typography>
-                {point.url && (
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
-                    <a href={point.url} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                      View details →
-                    </a>
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Box>
-    </Box>
-  );
+
 
   return (
     <Box sx={{ 
@@ -504,38 +410,15 @@ function App() {
         </Typography>
       </Box>
 
-      {/* Timeline Panel */}
-      {!isMobile && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            height: '100%',
-            zIndex: 1000,
-          }}
-        >
-          <TimelinePanel />
-        </Box>
-      )}
-
-      {/* Mobile Timeline Drawer */}
-      {isMobile && (
-        <Drawer
-          anchor="bottom"
-          open={timelineOpen}
-          onClose={() => setTimelineOpen(false)}
-          PaperProps={{
-            sx: {
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              maxHeight: '80vh',
-            },
-          }}
-        >
-          <TimelinePanel />
-        </Drawer>
-      )}
+      {/* Timeline */}
+      <Timeline
+        points={points}
+        selectedPost={selectedPost}
+        isOpen={timelineOpen}
+        isMobile={isMobile}
+        onPostClick={handlePostClick}
+        onClose={() => setTimelineOpen(false)}
+      />
 
       {/* Floating Action Button - Only for authenticated users */}
       {user && (

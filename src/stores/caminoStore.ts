@@ -1,20 +1,9 @@
 import { create } from 'zustand';
 import { getCaminoPoints, addCaminoPoint } from '../firebase';
+import { Point } from '../types';
 
 // Shared constant for the camino ID
 export const CAMINO_ID = '8FSx2nxzykqG4HjzFEZ8';
-
-interface Point {
-  id: string;
-  title: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
-  cover: string;
-  timestamp: any; // Firestore Timestamp
-  url?: string;
-}
 
 interface CaminoStore {
   // State
