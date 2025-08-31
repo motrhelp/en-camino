@@ -9,7 +9,6 @@ import {
   useMediaQuery,
   useTheme as useMuiTheme
 } from '@mui/material';
-import { AddPointDialog } from './AddPointDialog';
 import { CrosshairOverlay } from './CrosshairOverlay';
 import { Timeline } from './Timeline';
 import maplibregl from 'maplibre-gl';
@@ -17,11 +16,15 @@ import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import { logout, onAuthChange } from './firebase';
 import { useCaminoStore, CAMINO_ID } from './stores/caminoStore';
+import { Point } from './types';
+import { PointDialog } from './PointDialog';
 
 function App() {
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [addPointOpen, setAddPointOpen] = useState(false);
+  const [editPointOpen, setEditPointOpen] = useState(false);
+  const [editingPoint, setEditingPoint] = useState<Point | null>(null);
   const [positioningMode, setPositioningMode] = useState(false);
   const [selectedCoordinates, setSelectedCoordinates] = useState<[number, number] | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -352,6 +355,15 @@ function App() {
     setAddPointOpen(true);
   };
 
+  const handleEditPoint = (point: Point) => {
+    setEditingPoint(point);
+    setEditPointOpen(true);
+  };
+
+  const handleCloseEditPoint = () => {
+    setEditPointOpen(false);
+    setEditingPoint(null);
+  };
 
 
   return (
@@ -361,7 +373,21 @@ function App() {
       overflow: 'hidden',
       paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
     }}>
-      <AddPointDialog open={addPointOpen} onClose={handleCloseAddPoint} coordinates={selectedCoordinates} />
+      {/* Add Point Dialog */}
+      <PointDialog
+        open={addPointOpen}
+        mode="add"
+        onClose={handleCloseAddPoint}
+        coordinates={selectedCoordinates}
+      />
+
+      {/* Edit Point Dialog */}
+      <PointDialog
+        open={editPointOpen}
+        mode="edit"
+        onClose={handleCloseEditPoint}
+        point={editingPoint}
+      />
       {positioningMode && (
         <CrosshairOverlay 
           onConfirm={handleConfirmLocation}
@@ -419,6 +445,7 @@ function App() {
         onPostClick={handlePostClick}
         onClose={() => setTimelineOpen(false)}
         user={user}
+        onEdit={handleEditPoint}
       />
 
       {/* Floating Action Button - Only for authenticated users */}

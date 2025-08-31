@@ -12,6 +12,7 @@ interface TimelineProps {
   onPostClick: (id: string) => void;
   onClose: () => void;
   user: User | null;
+  onEdit: (point: Point) => void;
 }
 
 export const Timeline = ({ 
@@ -21,7 +22,8 @@ export const Timeline = ({
   isMobile, 
   onPostClick, 
   onClose,
-  user
+  user,
+  onEdit
 }: TimelineProps) => {
   const filteredPoints = points.filter(point => point.title || point.url);
 
@@ -77,6 +79,7 @@ export const Timeline = ({
               isCurrent={isCurrent}
               onClick={onPostClick}
               user={user}
+              onEdit={onEdit}
             />
           );
         })}

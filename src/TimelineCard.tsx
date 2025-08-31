@@ -8,9 +8,10 @@ interface TimelineCardProps {
   isCurrent: boolean;
   onClick: (id: string) => void;
   user: User | null;
+  onEdit: (point: Point) => void;
 }
 
-export const TimelineCard = ({ point, isSelected, isCurrent, onClick, user }: TimelineCardProps) => {
+export const TimelineCard = ({ point, isSelected, isCurrent, onClick, user, onEdit }: TimelineCardProps) => {
   const date = point.timestamp?.toDate ? point.timestamp.toDate() : new Date();
 
   return (
@@ -39,9 +40,12 @@ export const TimelineCard = ({ point, isSelected, isCurrent, onClick, user }: Ti
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {user && (
               <Button
-                // variant="outlined"
                 size="small"
                 color="primary"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering the card click
+                  onEdit(point);
+                }}
               >
                 Edit
               </Button>
