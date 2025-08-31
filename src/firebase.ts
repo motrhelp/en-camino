@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -74,7 +74,6 @@ export const addCaminoPoint = async (caminoId: string, pointData: {
     
     const docData = {
       ...cleanPointData,
-      timestamp: serverTimestamp(), // Use server timestamp for consistency
     };
     
     const docRef = await addDoc(pointsRef, docData);
@@ -82,6 +81,31 @@ export const addCaminoPoint = async (caminoId: string, pointData: {
   } catch (error: any) {
     console.error('❌ Failed to add point to Firestore:', error);
     return { id: null, error: error.message };
+  }
+};
+
+export const updateCaminoPoint = async (caminoId: string, pointId: string, pointData: {
+  title?: string;
+  url?: string;
+  timestamp: Date;
+}) => {
+  try {
+    const pointRef = doc(db, 'caminos', caminoId, 'points', pointId);
+    
+    // Filter out undefined values to avoid Firestore errors
+    const cleanPointData = Object.fromEntries(
+      Object.entries(pointData).filter(([_, value]) => value !== undefined)
+    );
+    
+    const docData = {
+      ...cleanPointData,
+    };
+    
+    await updateDoc(pointRef, docData);
+    return { error: null };
+  } catch (error: any) {
+    console.error('❌ Failed to update point in Firestore:', error);
+    return { error: error.message };
   }
 };
 

@@ -29,7 +29,7 @@ export const PointDialog = ({ open, mode, onClose, coordinates, point }: PointDi
   const [timestamp, setTimestamp] = useState('');
   const [image, setImage] = useState<File | null>(null);
   
-  const { addPoint, loading, error } = useCaminoStore();
+  const { addPoint, updatePoint, loading, error } = useCaminoStore();
 
   // Pre-populate form when editing
   useEffect(() => {
@@ -75,9 +75,21 @@ export const PointDialog = ({ open, mode, onClose, coordinates, point }: PointDi
         onClose();
       }
     } else if (mode === 'edit') {
-      // TODO: Implement edit functionality
-      console.log('Edit mode - update point:', { title, url, timestamp });
-      onClose();
+      if (!point?.id || !timestamp) {
+        return; // Don't update if no point ID or timestamp
+      }
+
+      const updateData = {
+        ...(title.trim() ? { title: title.trim() } : { title: '' }), // Allow clearing title
+        ...(url.trim() ? { url: url.trim() } : { url: '' }), // Allow clearing URL
+        timestamp: new Date(timestamp),
+      };
+
+      const result = await updatePoint(point.id, updateData);
+      
+      if (result.success) {
+        onClose();
+      }
     }
   };
 
