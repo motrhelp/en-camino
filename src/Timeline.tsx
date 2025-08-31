@@ -2,6 +2,7 @@ import { Close as CloseIcon } from '@mui/icons-material';
 import { Box, Drawer, IconButton, Typography } from '@mui/material';
 import { TimelineCard } from './TimelineCard';
 import { Point } from './types';
+import type { User } from 'firebase/auth';
 
 interface TimelineProps {
   points: Point[];
@@ -10,6 +11,7 @@ interface TimelineProps {
   isMobile: boolean;
   onPostClick: (id: string) => void;
   onClose: () => void;
+  user: User | null;
 }
 
 export const Timeline = ({ 
@@ -18,7 +20,8 @@ export const Timeline = ({
   isOpen, 
   isMobile, 
   onPostClick, 
-  onClose 
+  onClose,
+  user
 }: TimelineProps) => {
   const filteredPoints = points.filter(point => point.title || point.url);
 
@@ -73,6 +76,7 @@ export const Timeline = ({
               isSelected={selectedPost === point.id}
               isCurrent={isCurrent}
               onClick={onPostClick}
+              user={user}
             />
           );
         })}

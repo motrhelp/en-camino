@@ -418,6 +418,7 @@ function App() {
         isMobile={isMobile}
         onPostClick={handlePostClick}
         onClose={() => setTimelineOpen(false)}
+        user={user}
       />
 
       {/* Floating Action Button - Only for authenticated users */}

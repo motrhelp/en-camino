@@ -1,14 +1,16 @@
-import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Typography, Button } from '@mui/material';
 import { Point } from './types';
+import type { User } from 'firebase/auth';
 
 interface TimelineCardProps {
   point: Point;
   isSelected: boolean;
   isCurrent: boolean;
   onClick: (id: string) => void;
+  user: User | null;
 }
 
-export const TimelineCard = ({ point, isSelected, isCurrent, onClick }: TimelineCardProps) => {
+export const TimelineCard = ({ point, isSelected, isCurrent, onClick, user }: TimelineCardProps) => {
   const date = point.timestamp?.toDate ? point.timestamp.toDate() : new Date();
 
   return (
@@ -34,17 +36,28 @@ export const TimelineCard = ({ point, isSelected, isCurrent, onClick }: Timeline
               day: 'numeric' 
             })}
           </Typography>
-          {isCurrent && (
-            <Chip
-              label="Current"
-              size="small"
-              sx={{
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
-                fontSize: '0.7rem',
-              }}
-            />
-          )}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            {user && (
+              <Button
+                // variant="outlined"
+                size="small"
+                color="primary"
+              >
+                Edit
+              </Button>
+            )}
+            {isCurrent && (
+              <Chip
+                label="Current"
+                size="small"
+                sx={{
+                  backgroundColor: 'primary.main',
+                  color: 'primary.contrastText',
+                  fontSize: '0.7rem',
+                }}
+              />
+            )}
+          </Box>
         </Box>
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
           {point.title}
