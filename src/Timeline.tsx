@@ -1,8 +1,9 @@
 import { Close as CloseIcon } from '@mui/icons-material';
-import { Box, Drawer, IconButton, Typography } from '@mui/material';
+import { Box, Drawer, IconButton, Typography, Switch, FormControlLabel } from '@mui/material';
 import { TimelineCard } from './TimelineCard';
 import { Point } from './types';
 import type { User } from 'firebase/auth';
+import { useState } from 'react';
 
 interface TimelineProps {
   points: Point[];
@@ -25,7 +26,11 @@ export const Timeline = ({
   user,
   onEdit
 }: TimelineProps) => {
-  const filteredPoints = points.filter(point => point.title || point.url);
+  const [showAllPoints, setShowAllPoints] = useState(false);
+  
+  const filteredPoints = showAllPoints 
+    ? points 
+    : points.filter(point => point.title || point.url);
 
   return (
     <Drawer
@@ -59,6 +64,24 @@ export const Timeline = ({
           Journey Timeline
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {user && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showAllPoints}
+                  onChange={(e) => setShowAllPoints(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Show all points"
+              sx={{ 
+                '& .MuiFormControlLabel-label': { 
+                  fontSize: '0.75rem',
+                  color: 'text.secondary'
+                } 
+              }}
+            />
+          )}
           {isMobile && (
             <IconButton onClick={onClose} size="small">
               <CloseIcon />

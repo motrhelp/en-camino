@@ -164,17 +164,25 @@ function App() {
     });
     map.current.fitBounds(bounds, { padding: 180, duration: 800 });
 
-    // Clear existing pins
-    points.forEach(point => {
-      const pinId = `pin-${point.id}`;
-      if (map.current!.getLayer(pinId)) {
-        map.current!.removeLayer(pinId);
+    // Clear ALL existing pins (not just current ones)
+    const existingLayers = map.current!.getStyle().layers || [];
+    const existingSources = Object.keys(map.current!.getStyle().sources || {});
+    
+    // Remove all pin layers
+    existingLayers.forEach(layer => {
+      if (layer.id.startsWith('pin-')) {
+        if (map.current!.getLayer(layer.id)) {
+          map.current!.removeLayer(layer.id);
+        }
       }
-      if (map.current!.getLayer(`${pinId}-pulse`)) {
-        map.current!.removeLayer(`${pinId}-pulse`);
-      }
-      if (map.current!.getSource(pinId)) {
-        map.current!.removeSource(pinId);
+    });
+    
+    // Remove all pin sources
+    existingSources.forEach(sourceId => {
+      if (sourceId.startsWith('pin-')) {
+        if (map.current!.getSource(sourceId)) {
+          map.current!.removeSource(sourceId);
+        }
       }
     });
 
