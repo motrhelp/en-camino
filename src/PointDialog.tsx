@@ -29,7 +29,7 @@ export const PointDialog = ({ open, mode, onClose, coordinates, point }: PointDi
   const [timestamp, setTimestamp] = useState('');
   const [image, setImage] = useState<File | null>(null);
   
-  const { addPoint, updatePoint, loading, error } = useCaminoStore();
+  const { addPoint, updatePoint, deletePoint, loading, error } = useCaminoStore();
 
   // Pre-populate form when editing
   useEffect(() => {
@@ -87,6 +87,15 @@ export const PointDialog = ({ open, mode, onClose, coordinates, point }: PointDi
 
       const result = await updatePoint(point.id, updateData);
       
+      if (result.success) {
+        onClose();
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (mode === 'edit' && point?.id) {
+      const result = await deletePoint(point.id);
       if (result.success) {
         onClose();
       }
@@ -204,11 +213,22 @@ export const PointDialog = ({ open, mode, onClose, coordinates, point }: PointDi
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 3, pt: 0 }}>
+        {mode === 'edit' && (
+          <Button 
+            onClick={handleDelete} 
+            variant="outlined" 
+            color="error"
+            disabled={loading}
+            sx={{ mr: 'auto' }}
+          >
+            Delete
+          </Button>
+        )}
         <Button 
           onClick={handleSubmit} 
           variant="contained" 
           disabled={!isFormValid || loading}
-          fullWidth
+          fullWidth={mode === 'add'}
           size="large"
         >
           {getSubmitButtonText()}

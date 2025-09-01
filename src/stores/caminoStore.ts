@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getCaminoPoints, addCaminoPoint, updateCaminoPoint } from '../firebase';
+import { getCaminoPoints, addCaminoPoint, updateCaminoPoint, deleteCaminoPoint } from '../firebase';
 import { Point } from '../types';
 
 // Shared constant for the camino ID
@@ -20,6 +20,7 @@ interface CaminoStore {
   subscribeToPoints: (caminoId: string) => () => void; // Returns unsubscribe function
   addPoint: (pointData: Omit<Point, 'id'>) => Promise<{ success: boolean; error?: string }>;
   updatePoint: (pointId: string, pointData: { title?: string; url?: string; timestamp: Date }) => Promise<{ success: boolean; error?: string }>;
+  deletePoint: (pointId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useCaminoStore = create<CaminoStore>((set, get) => ({
@@ -86,6 +87,27 @@ export const useCaminoStore = create<CaminoStore>((set, get) => ({
       return { success: true };
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to update point';
+      set({ loading: false, error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  deletePoint: async (pointId) => {
+    try {
+      set({ loading: true, error: null });
+      
+      const result = await deleteCaminoPoint(CAMINO_ID, pointId);
+      
+      if (result.error) {
+        set({ loading: false, error: result.error });
+        return { success: false, error: result.error };
+      }
+      
+      // The point will be automatically removed from the store via the subscription
+      set({ loading: false, error: null });
+      return { success: true };
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to delete point';
       set({ loading: false, error: errorMessage });
       return { success: false, error: errorMessage };
     }

@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -105,6 +105,17 @@ export const updateCaminoPoint = async (caminoId: string, pointId: string, point
     return { error: null };
   } catch (error: any) {
     console.error('❌ Failed to update point in Firestore:', error);
+    return { error: error.message };
+  }
+};
+
+export const deleteCaminoPoint = async (caminoId: string, pointId: string) => {
+  try {
+    const pointRef = doc(db, 'caminos', caminoId, 'points', pointId);
+    await deleteDoc(pointRef);
+    return { error: null };
+  } catch (error: any) {
+    console.error('❌ Failed to delete point from Firestore:', error);
     return { error: error.message };
   }
 };
